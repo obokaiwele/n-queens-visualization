@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+        <title>8 Queens Visualization</title>
+        <style>
+            .board {
+                margin: 0 auto;
+                border-collapse: collapse;
+                background-color: #ffebcd;
+                text-align: center;
+                vertical-align: middle;
+                font-size: 12px;
+            }
+            .board td {
+                width: 20px;
+                height: 20px;
+            }
+            .board tr:nth-child(odd) td:nth-child(even),
+            .board tr:nth-child(even) td:nth-child(odd) {
+                background-color: #cd853f;
+            }
+        </style>
+    </head>
+    <body class="container">
+        <h1 class="text-center"><a href="https://en.wikipedia.org/wiki/Eight_queens_puzzle">8 Queens</a></h1>
+
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+        <script type='text/javascript'>
+            /**
+             * Reference Implementation: https://www.techiedelight.com/print-possible-solutions-n-queens-problem/
+             */
+            class AnimatedQueens {
+                constructor(size = 8) {
+                    this.size = size;
+                    this.numSolutions = 0;
+                    this.boardsPerRow = 6;
+                    this.pathCount = 0;
+                    this.$parent = $('<div>').addClass(`row row-cols-${this.boardsPerRow}`);
+                    $('body').append(this.$parent);
+                }
+
+                makeBoard() {
+                    const size = this.size;
+                    const board = new Array(size);
+                    for (let rowIndex = 0; rowIndex < board.length; rowIndex++ ) {
+                        board[rowIndex] = new Array(size).fill(0);
+                    }
+                    return board;
+                }
+
+                /**
+                 * Utility function to print a board
+                 * @param {Array} board 
+                 */
+                printBoard(board) {
+                    for ( let rowIndex = 0; rowIndex < board.length; rowIndex++ ) {
+                        console.log(board[rowIndex].join(' '));
+                    }
+                    console.log();
+                }
+
+                /**
+                 * Utility function to check if a queen can be placed on baord[rowIndex][colIndex].
+                 * @param {*} board 
+                 * @param {*} rowIndex 
+                 * @param {*} colIndex 
+                 */
+                isSafe(board, rowIndex, colIndex) {
+                    // Return false if two queens share the same column
+                    for ( let row = 0; row < rowIndex; row++ ) {
+                        if ( board[row][colIndex] === 1 ) {
+                            return false;
+                        }
+                    }
+
+                    // Return false if two queens share the same \ diagonal
+                    for ( let [row, col] = [rowIndex, colIndex]; row >= 0 && col >= 0; row--, col-- ) {
+                        if ( board[row][col] === 1 ) {
+                            return false
+                        }
+                    }
+
+                    // Return false if two queens share the same / diagonal
+                    for ( let [row, col] = [rowIndex, colIndex]; row >= 0 && col < board.length; row--, col++ ) {
+                        if ( board[row][col] === 1 ) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                /**
+                 * A recursive utility function to solve N
+                 */
+                 solve(board, rowIndex) {
+                    let isSolved = false;
+
+                    // Print colution if N queens are places successfully
+                    if ( rowIndex >= board.length ) {
+                        this.drawBoard(board);      // this.printBoard(board);
+                        isSolved = true;
+                        // console.log(`Ending path ${++this.pathCount}: SUCCESS: ${isSolved}`);
+                        return isSolved;
+                    }
+
+                    // Place Queen at every square in currrent row and recur for each valid movement
+                    for ( let colIndex = 0; colIndex < board.length; colIndex++ ) {
+                        // If no two Queens threaten each other
+                        if ( this.isSafe(board, rowIndex, colIndex) ) {
+                            // Place Queen on current square
+                            board[rowIndex][colIndex] = 1;
+
+                            // Recur for next row
+                            isSolved = this.solve(board, rowIndex + 1) || isSolved;
+
+                            // Backtrack and remove queen from current square
+                            board[rowIndex][colIndex] = 0;
+                        }
+                    }
+
+                    // If queen cannot be placed in any row in this column, then return false
+                    // console.log(`Ending path ${++this.pathCount}: FAILRE: ${isSolved}`);
+                    return isSolved;
+                }
+
+                drawBoard(board) {
+                    const $board = $('<div>').addClass('col pt-5');
+                    const $body = $('<div>');
+                    const $footer = $('<div>').addClass('card-footer');
+                    const $card = $('<div>').addClass('card text-center').append($body).append($footer);
+
+                    const $table = $('<table>').addClass('board');
+                    for ( let rowIndex = 0; rowIndex < board.length; rowIndex++ ) {
+                        const $row = $('<tr>');
+                        for ( let colIndex = 0; colIndex < board[rowIndex].length; colIndex++ ) {
+                            const $cell = $('<td>');
+                            if ( board[rowIndex][colIndex] === 1 ) {
+                                $cell.html('&#x265B;');
+                            }
+                            $row.append($cell);
+                        }
+                        $table.append($row);
+                    }
+
+                    $body.append($table);
+                    $board.append($card);
+                    this.$parent.append($board);
+                }
+            }
+
+            const animatedQueens = new AnimatedQueens(8);
+            const board = animatedQueens.makeBoard();
+            const rowIndex=  0;
+
+            const start = new Date().getTime();
+            const isSolved = animatedQueens.solve(board, rowIndex);
+            if ( ! isSolved ) {
+                console.log('Unable to find solution');
+            }
+            const duration = new Date().getTime() - start;
+            console.log(`Duration: ${duration} milliseonds`);
+
+        </script>
+    </body>
+</html>
